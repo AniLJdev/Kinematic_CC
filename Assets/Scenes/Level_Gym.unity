@@ -1343,11 +1343,13 @@ MonoBehaviour:
   _groundAcceleration: 5
   _isRun: 0
   _maxSpeed: 22
-  _airAddSpeed: 8
+  _airAddSpeed: 15
   _airMaxSpeed: 4
   _airAcceleration: 2
   _gravity: {x: 0, y: -22, z: 0}
   _jumpForce: 10
+  _coyoteTime: 0.2
+  _offGroundTime: 0.1
   m_movebutton: {x: 0, y: 0}
   m_lookRot: {x: 0, y: 0}
   m_jumpbutton: 0

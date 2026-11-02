@@ -1,8 +1,8 @@
 using KinematicCharacterController;
 using Unity.Cinemachine;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using System.Threading;
 
 public class MyCharacterController : MonoBehaviour, ICharacterController
 {   
@@ -25,8 +25,10 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
     [Header("Jump")]
     [SerializeField] private float _jumpForce = 10f;
     //[SerializeField] private int _jumpCount = 2;
+    private bool _jumpIsPressed;
     private bool _canJump;
-    private float _coyoteTime = 0.1f;
+    [SerializeField] private float _coyoteTime = 0.2f;
+    [SerializeField] private float _offGroundTime = 0.2f;
 
     //Input System
     private InputSystem_Player _input;
@@ -95,7 +97,6 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
         _look.canceled += OnLookAround;
 
         _jump.performed += OnJump;
-        _jump.canceled += OnJump;
 
         _sprint.performed += OnSprint;
         _sprint.canceled += OnSprint;
@@ -112,7 +113,6 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
         _look.canceled -= OnLookAround;
 
         _jump.performed -= OnJump;
-        _jump.canceled -= OnJump;
 
         _sprint.performed -= OnSprint;
         _sprint.canceled -= OnSprint;
@@ -211,6 +211,9 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
          currentVelocity = new Vector3(maxXZspeed.x, currentVelocity.y, maxXZspeed.z);
 
         currentVelocity = Vector3.Lerp(currentVelocity, targetVel, deltaTime * _groundAcceleration);
+
+        //Ground coyote
+        _canJump = true;
     }
 
     //Add part where player move with platform
@@ -219,6 +222,9 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
     //How player move on Air
     private void AirVelocity(ref Vector3 currentVelocity, float deltaTime)
     {
+
+        LeaveGroundCoyote();
+
         //only overwrite speed when player is controlling 
         if (_playerInputs.MoveButton.sqrMagnitude > 0)
         {
@@ -237,22 +243,50 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
 
         //apply gravity
         currentVelocity += _gravity * deltaTime;
+
+
+
     }
 
+    //Raw jump function that pull player up with jump force
     private void Jump(ref Vector3 currentVelocity, float deltaTime)
     {
-        if (_playerInputs.JumpButton && _motor.GroundingStatus.IsStableOnGround)
+        if (/* _playerInputs.JumpButton && */ _jumpIsPressed && _canJump)
         { 
           _motor.ForceUnground();
 
             Vector3 jumpForce = _motor.CharacterUp * _jumpForce;
 
             currentVelocity += jumpForce;
+            _canJump = false;
         }
+    }
+
+
+
+    private async void CoyoteTime()
+    {
+        Debug.Log("CoyoteTime: please don't spawn this message x time per press");
+
+        _jumpIsPressed = true;
+        Debug.Log("jump pressed" + _jumpIsPressed);
+        await Awaitable.WaitForSecondsAsync(_coyoteTime);
+
+        _jumpIsPressed = false;
+        Debug.Log("jump pressed" + _jumpIsPressed);
+    }
+
+    private async void LeaveGroundCoyote()
+    {
+
+        await Awaitable.WaitForSecondsAsync(_offGroundTime);
+
+        _canJump = false;
     }
 
     //new Input System
 
+    //handle Move input in Vector2
     private void OnMove(InputAction.CallbackContext ctx)
     {
         Vector2 input = ctx.ReadValue<Vector2>();
@@ -265,21 +299,24 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
 
     }
 
-    //why you are not working on pressed???????????????????? you work just like OnMove()
+   //Handle Jump input only
     private void OnJump(InputAction.CallbackContext ctx)
     {
         bool jumpPressed = ctx.ReadValueAsButton();
-        Debug.Log(jumpPressed);
+       // Debug.Log(jumpPressed);
 
         _playerInputs.JumpButton = jumpPressed;
+
+        CoyoteTime();
 
 
     }
 
+    //handle sprint input and bool
     private void OnSprint(InputAction.CallbackContext ctx)
     {
         bool running = ctx.ReadValueAsButton();
-        Debug.Log(running);
+        //Debug.Log(running);
 
         _playerInputs.DashButton = running;
         _isRun = running;

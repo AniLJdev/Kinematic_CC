@@ -1,6 +1,5 @@
 using KinematicCharacterController;
 using System;
-using System.Threading;
 using UnityEngine;
 public class MovingPlatform : MonoBehaviour, IMoverController
 {
