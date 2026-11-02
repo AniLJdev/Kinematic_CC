@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 7681317472184069449}
   - component: {fileID: 3219615924788305903}
   - component: {fileID: 3504351912409969671}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: arm
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -124,7 +124,7 @@ GameObject:
   - component: {fileID: 8318756095943373109}
   - component: {fileID: 5327884400603145482}
   - component: {fileID: 3215414772434429516}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: head
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -236,7 +236,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6028037542200467674}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: mesh
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -275,9 +275,9 @@ GameObject:
   - component: {fileID: 4366669927507273059}
   - component: {fileID: 3144336079928967704}
   - component: {fileID: 8850115647396083530}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Character
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -319,6 +319,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4498f9ca4b1386c4a8ead038772aaf84, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MyCharacterController
+  _walkSpeed: 3
+  _runSpeed: 8
+  _maxSpeed: 15
+  _isRun: 0
+  _groundControlRate: 1
+  _airControlRate: 1
+  _gravity: {x: 0, y: -9.7, z: 0}
+  _jumpForce: 10
+  m_movebutton: {x: 0, y: 0}
+  m_lookRot: {x: 0, y: 0}
+  m_jumpbutton: 0
 --- !u!114 &5793156972417785486
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -472,7 +483,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6420478336179188731}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Root
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -506,7 +517,7 @@ GameObject:
   - component: {fileID: 4588160307301193274}
   - component: {fileID: 3134862999975614225}
   - component: {fileID: 5846976675224548246}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: nose (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -620,7 +631,7 @@ GameObject:
   - component: {fileID: 2939427848266578156}
   - component: {fileID: 1216227201361273935}
   - component: {fileID: 6947830679263520072}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: nose
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -734,7 +745,7 @@ GameObject:
   - component: {fileID: 2671122996942919105}
   - component: {fileID: 4325780566354407766}
   - component: {fileID: 4111609809250751339}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: nose (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}

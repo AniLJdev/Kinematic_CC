@@ -5,12 +5,12 @@ public struct PlayerInput
 {
     [SerializeField] private Vector2 _moveButton;
     [SerializeField] private Vector2 _cameraRotation;
-    [SerializeField] private float _jumpButton;
+    [SerializeField] private bool _jumpButton;
 
-    public Vector2 MoveButton => _moveButton;
-    public Vector2 CameraRotation => _cameraRotation;
-    public float JumpButton => _jumpButton;
-    public PlayerInput(Vector2 move, Vector2 rotation, float jump)
+    public Vector2 MoveButton { get { return _moveButton; } set { _moveButton = value; } }
+    public Vector2 CameraRotation { get { return _cameraRotation; } set { _cameraRotation = value; } }
+    public bool JumpButton { get { return _jumpButton; } set { _jumpButton = value; } }
+    public PlayerInput(Vector2 move, Vector2 rotation, bool jump)
     { 
         this._moveButton = move;
         this._cameraRotation = rotation;   

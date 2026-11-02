@@ -1,5 +1,6 @@
 using KinematicCharacterController;
 using Unity.Cinemachine;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -9,15 +10,19 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
     private CinemachineCamera _Camera;
 
     [Header("Ground Movement")]
-    [SerializeField] private float _groundAcceleration = 10f;
-    [SerializeField] private float _groundSpeedMax = 15f;
+    [SerializeField] private float _walkSpeed = 3f;
+    [SerializeField] private float _runSpeed = 8f;
+    [SerializeField] private float _maxSpeed = 15f;
+    [SerializeField] private bool _isRun;
+
+    [Header("Ground Movement")]
+
     [SerializeField] private float _groundControlRate = 1f;
 
     [Header("Air Movement")]
-    [SerializeField] private float _airAcceleration = 5f;
-    [SerializeField] private float _airSpeedMax = 15f;
+
     [SerializeField] private float _airControlRate = 1f;
-    [SerializeField] private float _gravity = 9.7f;
+    [SerializeField] private Vector3 _gravity = new Vector3(0,-9.7f,0);
 
     [Header("Jump")]
     [SerializeField] private float _jumpForce = 10f;
@@ -32,19 +37,52 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
     private InputAction _look;
     private InputAction _jump;
 
+    [Header("Debug")]
+    private PlayerInput _playerInputs;
+    public Vector2 m_movebutton;
+    public Vector2 m_lookRot;
+    public bool m_jumpbutton;
 
     private void Awake()
     {
+        AddKinematicCC();
         AddInput();
     }
 
     private void Start()
     {
-        AddKinematicCC();
+        
     }
+
     private void OnEnable()
     {
         EnableInputSystem();
+    }
+
+    private void OnDisable()
+    {
+        DisableInputSystem();
+    }
+
+
+    private void Update()
+    {
+        // Debug.Log(_playerInputs.JumpButton);
+        InputStructDebug();
+        PressJump();
+    }
+
+    private void InputStructDebug()
+    {
+        m_movebutton = _playerInputs.MoveButton;
+        m_jumpbutton = _playerInputs.JumpButton;
+        m_lookRot = _playerInputs.CameraRotation;
+    }
+
+    private void AddKinematicCC()
+    {
+        _motor = GetComponent<KinematicCharacterMotor>();
+        _motor.CharacterController = this;
     }
 
     private void EnableInputSystem()
@@ -57,18 +95,13 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
         _look.performed += OnLookAround;
         _look.canceled += OnLookAround;
 
-        _jump.started += OnJump;
+        _jump.started += Jump;
+        _jump.canceled += Jump;
     }
 
-
-
-    private void OnDisable()
-    {
-        DisableInputSystem();
-    }
     private void DisableInputSystem()
     {
-        _input.Player.Enable();
+        _input.Player.Disable();
 
         _move.performed -= OnMove;
         _move.canceled -= OnMove;
@@ -76,20 +109,10 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
         _look.performed -= OnLookAround;
         _look.canceled -= OnLookAround;
 
-        _jump.started -= OnJump;
+        _jump.started -= Jump;
+        _jump.canceled -= Jump;
     }
 
-    private void Update()
-    {
-        
-    }
-
-
-    private void AddKinematicCC()
-    {
-        _motor = GetComponent<KinematicCharacterMotor>();
-        _motor.CharacterController = this;
-    }
 
     private void AddInput()
     {
@@ -148,14 +171,53 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
 
     public void UpdateVelocity(ref Vector3 currentVelocity, float deltaTime)
     {
-       
+        //Remove this after ground check
+        GroundVelocity(ref currentVelocity, deltaTime);
+
+        if (_motor.GroundingStatus.IsStableOnGround)
+        {
+            GroundVelocity(ref currentVelocity, deltaTime);
+        }
+        else
+        {
+            AirVelocity(ref currentVelocity, deltaTime);
+        }
     }
 
-    //Input System
+    //How player move on ground
+    private void GroundVelocity(ref Vector3 currentVelocity, float deltaTime)
+    {
+        float speed = _isRun ? _runSpeed : _walkSpeed;
+        
+        //Retarget the player input to the right movement axis
+        Vector3 targetVel = new Vector3(_playerInputs.MoveButton.y * speed,0 , _playerInputs.MoveButton.x * speed * -1);
+
+        Debug.Log(targetVel);
+        currentVelocity = Vector3.Lerp(currentVelocity, targetVel, deltaTime * speed);
+    }
+
+    //How player move on Air
+    private void AirVelocity(ref Vector3 currentVelocity, float deltaTime)
+    { 
+     
+
+        //apply gravity
+       // currentVelocity = _gravity * deltaTime;
+    }
+
+
+    //new Input System
+    private void PlayerInputs()
+    { 
+      
+    }
+
 
     private void OnMove(InputAction.CallbackContext ctx)
     {
+        Vector2 input = ctx.ReadValue<Vector2>();
         
+        _playerInputs.MoveButton = input;
     }
 
     private void OnLookAround(InputAction.CallbackContext ctx)
@@ -163,8 +225,27 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
 
     }
 
-    private void OnJump(InputAction.CallbackContext ctx)
+    //why you are not working on pressed???????????????????? you work just like OnMove()
+    private void Jump(InputAction.CallbackContext ctx)
     {
+        bool jumpPressed = ctx.ReadValueAsButton();
+        Debug.Log(jumpPressed);
+
+        _playerInputs.JumpButton = jumpPressed;
+
+
+    }
+
+    private void PressJump()
+    {
+        if (_jump.IsPressed())
+        {
+            _playerInputs.JumpButton = true;
+        }
+        else 
+        {
+            _playerInputs.JumpButton = false;
+        }
 
     }
 }
