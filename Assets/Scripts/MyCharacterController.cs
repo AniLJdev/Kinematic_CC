@@ -12,16 +12,14 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
     [Header("Ground Movement")]
     [SerializeField] private float _walkSpeed = 3f;
     [SerializeField] private float _runSpeed = 8f;
-    [SerializeField] private float _maxSpeed = 15f;
-    [SerializeField] private bool _isRun;
-
-    [Header("Ground Movement")]
-
-    [SerializeField] private float _groundControlRate = 1f;
+    [SerializeField] private float _groundAcceleration = 5f;
+    [SerializeField] private bool  _isRun;
+    [SerializeField] private float _maxSpeed = 22f;
 
     [Header("Air Movement")]
-
-    [SerializeField] private float _airControlRate = 1f;
+    [SerializeField] private float _airAddSpeed = 15f;
+    [SerializeField] private float _airMaxSpeed = 4f;
+    [SerializeField] private float _airAcceleration = 2f;
     [SerializeField] private Vector3 _gravity = new Vector3(0,-9.7f,0);
 
     [Header("Jump")]
@@ -36,6 +34,7 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
     private InputAction _move;
     private InputAction _look;
     private InputAction _jump;
+    private InputAction _sprint;
 
     [Header("Debug")]
     private PlayerInput _playerInputs;
@@ -45,13 +44,13 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
 
     private void Awake()
     {
-        AddKinematicCC();
+        
         AddInput();
     }
 
     private void Start()
     {
-        
+        AddKinematicCC();
     }
 
     private void OnEnable()
@@ -67,11 +66,11 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
 
     private void Update()
     {
-        // Debug.Log(_playerInputs.JumpButton);
         InputStructDebug();
-        PressJump();
+      
     }
 
+    //Visualize the struct on inspector, can remove when script is completed
     private void InputStructDebug()
     {
         m_movebutton = _playerInputs.MoveButton;
@@ -95,8 +94,11 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
         _look.performed += OnLookAround;
         _look.canceled += OnLookAround;
 
-        _jump.started += Jump;
-        _jump.canceled += Jump;
+        _jump.performed += OnJump;
+        _jump.canceled += OnJump;
+
+        _sprint.performed += OnSprint;
+        _sprint.canceled += OnSprint;
     }
 
     private void DisableInputSystem()
@@ -109,8 +111,11 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
         _look.performed -= OnLookAround;
         _look.canceled -= OnLookAround;
 
-        _jump.started -= Jump;
-        _jump.canceled -= Jump;
+        _jump.performed -= OnJump;
+        _jump.canceled -= OnJump;
+
+        _sprint.performed -= OnSprint;
+        _sprint.canceled -= OnSprint;
     }
 
 
@@ -120,6 +125,7 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
         _move = _input.Player.Move;
         _look = _input.Player.Look;
         _jump = _input.Player.Jump;
+        _sprint = _input.Player.Sprint;
     }
 
 
@@ -136,7 +142,7 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
 
     public bool IsColliderValidForCollisions(Collider coll)
     {
-       return false;
+       return true;
     }
 
     public void OnDiscreteCollisionDetected(Collider hitCollider)
@@ -171,8 +177,7 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
 
     public void UpdateVelocity(ref Vector3 currentVelocity, float deltaTime)
     {
-        //Remove this after ground check
-        GroundVelocity(ref currentVelocity, deltaTime);
+        //Change acceleration module base on ground check
 
         if (_motor.GroundingStatus.IsStableOnGround)
         {
@@ -182,36 +187,71 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
         {
             AirVelocity(ref currentVelocity, deltaTime);
         }
+
+
+
+        //Jump module
+        Jump(ref currentVelocity, deltaTime);
     }
 
     //How player move on ground
     private void GroundVelocity(ref Vector3 currentVelocity, float deltaTime)
     {
+        //Set speed
+       // if(_playerInputs.DashButton == true)
+
         float speed = _isRun ? _runSpeed : _walkSpeed;
-        
+
         //Retarget the player input to the right movement axis
         Vector3 targetVel = new Vector3(_playerInputs.MoveButton.y * speed,0 , _playerInputs.MoveButton.x * speed * -1);
 
-        Debug.Log(targetVel);
-        currentVelocity = Vector3.Lerp(currentVelocity, targetVel, deltaTime * speed);
+
+        //ground speed limit
+        Vector3 maxXZspeed = Vector3.ClampMagnitude(currentVelocity, _maxSpeed);
+         currentVelocity = new Vector3(maxXZspeed.x, currentVelocity.y, maxXZspeed.z);
+
+        currentVelocity = Vector3.Lerp(currentVelocity, targetVel, deltaTime * _groundAcceleration);
     }
+
+    //Add part where player move with platform
+
 
     //How player move on Air
     private void AirVelocity(ref Vector3 currentVelocity, float deltaTime)
-    { 
-     
+    {
+        //only overwrite speed when player is controlling 
+        if (_playerInputs.MoveButton.sqrMagnitude > 0)
+        {
+            //Set speed
+            float speed = _airAddSpeed;
+
+            //Retarget the player input to the right movement axis and add the velocity on existing velocity
+            Vector3 targetVel = new Vector3(_playerInputs.MoveButton.y * speed, 0, _playerInputs.MoveButton.x * speed * -1);
+
+            //Clamp air speed limit is add as a quick fix of continuous jump will boost jump distance by a lot
+            Vector3 addVelocity = Vector3.Lerp(Vector3.zero, Vector3.ClampMagnitude(targetVel, _airMaxSpeed) , deltaTime * _airAcceleration);
+
+            //not overwrite gravity
+            currentVelocity = currentVelocity + new Vector3(addVelocity.x, 0, addVelocity.z);
+        }
 
         //apply gravity
-       // currentVelocity = _gravity * deltaTime;
+        currentVelocity += _gravity * deltaTime;
     }
 
+    private void Jump(ref Vector3 currentVelocity, float deltaTime)
+    {
+        if (_playerInputs.JumpButton && _motor.GroundingStatus.IsStableOnGround)
+        { 
+          _motor.ForceUnground();
+
+            Vector3 jumpForce = _motor.CharacterUp * _jumpForce;
+
+            currentVelocity += jumpForce;
+        }
+    }
 
     //new Input System
-    private void PlayerInputs()
-    { 
-      
-    }
-
 
     private void OnMove(InputAction.CallbackContext ctx)
     {
@@ -226,7 +266,7 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
     }
 
     //why you are not working on pressed???????????????????? you work just like OnMove()
-    private void Jump(InputAction.CallbackContext ctx)
+    private void OnJump(InputAction.CallbackContext ctx)
     {
         bool jumpPressed = ctx.ReadValueAsButton();
         Debug.Log(jumpPressed);
@@ -236,16 +276,16 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
 
     }
 
-    private void PressJump()
+    private void OnSprint(InputAction.CallbackContext ctx)
     {
-        if (_jump.IsPressed())
-        {
-            _playerInputs.JumpButton = true;
-        }
-        else 
-        {
-            _playerInputs.JumpButton = false;
-        }
+        bool running = ctx.ReadValueAsButton();
+        Debug.Log(running);
+
+        _playerInputs.DashButton = running;
+        _isRun = running;
+
 
     }
+
+    
 }
