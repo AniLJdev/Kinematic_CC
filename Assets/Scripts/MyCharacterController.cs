@@ -38,11 +38,11 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
     private InputAction _jump;
     private InputAction _sprint;
 
-    [Header("Debug")]
+
+    [Header("Parameters")]
     private PlayerInput _playerInputs;
-    public Vector2 m_movebutton;
-    public Vector2 m_lookRot;
-    public bool m_jumpbutton;
+    private Vector3 _moveConvert;
+
 
     private void Awake()
     {
@@ -66,19 +66,6 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
     }
 
 
-    private void Update()
-    {
-        InputStructDebug();
-      
-    }
-
-    //Visualize the struct on inspector, can remove when script is completed
-    private void InputStructDebug()
-    {
-        m_movebutton = _playerInputs.MoveButton;
-        m_jumpbutton = _playerInputs.JumpButton;
-        m_lookRot = _playerInputs.CameraRotation;
-    }
 
     private void AddKinematicCC()
     {
@@ -189,7 +176,7 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
         }
 
 
-
+         
         //Jump module
         Jump(ref currentVelocity, deltaTime);
     }
@@ -198,13 +185,10 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
     private void GroundVelocity(ref Vector3 currentVelocity, float deltaTime)
     {
         //Set speed
-       // if(_playerInputs.DashButton == true)
-
         float speed = _isRun ? _runSpeed : _walkSpeed;
 
         //Retarget the player input to the right movement axis
-        Vector3 targetVel = new Vector3(_playerInputs.MoveButton.y * speed,0 , _playerInputs.MoveButton.x * speed * -1);
-
+        Vector3 targetVel = _moveConvert * speed;
 
         //ground speed limit
         Vector3 maxXZspeed = Vector3.ClampMagnitude(currentVelocity, _maxSpeed);
@@ -232,7 +216,7 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
             float speed = _airAddSpeed;
 
             //Retarget the player input to the right movement axis and add the velocity on existing velocity
-            Vector3 targetVel = new Vector3(_playerInputs.MoveButton.y * speed, 0, _playerInputs.MoveButton.x * speed * -1);
+            Vector3 targetVel = _moveConvert * speed;
 
             //Clamp air speed limit is add as a quick fix of continuous jump will boost jump distance by a lot
             Vector3 addVelocity = Vector3.Lerp(Vector3.zero, Vector3.ClampMagnitude(targetVel, _airMaxSpeed) , deltaTime * _airAcceleration);
@@ -284,15 +268,21 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
         _canJump = false;
     }
 
-    //new Input System
 
+
+    //new Input System
     //handle Move input in Vector2
     private void OnMove(InputAction.CallbackContext ctx)
     {
         Vector2 input = ctx.ReadValue<Vector2>();
-        
+   
         _playerInputs.MoveButton = input;
+
+        //Convert input into Vector3
+        _moveConvert = new Vector3(_playerInputs.MoveButton.x, 0, _playerInputs.MoveButton.y);
     }
+
+
 
     private void OnLookAround(InputAction.CallbackContext ctx)
     {
