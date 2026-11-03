@@ -1338,6 +1338,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4498f9ca4b1386c4a8ead038772aaf84, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MyCharacterController
+  _CameraTransform: {fileID: 0}
   _walkSpeed: 5
   _runSpeed: 8
   _groundAcceleration: 5
@@ -1350,9 +1351,6 @@ MonoBehaviour:
   _jumpForce: 10
   _coyoteTime: 0.2
   _offGroundTime: 0.1
-  m_movebutton: {x: 0, y: 0}
-  m_lookRot: {x: 0, y: 0}
-  m_jumpbutton: 0
 --- !u!114 &1350076309
 MonoBehaviour:
   m_ObjectHideFlags: 0
