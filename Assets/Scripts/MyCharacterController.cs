@@ -8,6 +8,7 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
 {   
     private KinematicCharacterMotor _motor;
     private CinemachineCamera _Camera;
+    [SerializeField] private Transform _CameraTransform;
 
     [Header("Ground Movement")]
     [SerializeField] private float _walkSpeed = 3f;
@@ -184,13 +185,29 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
         }
     }
 
+    private Vector3 GetCameraPlanarRotation(Vector2 _playerInputs)
+    {
+        Vector3 cameraForward = Vector3.ProjectOnPlane(_CameraTransform.forward, Vector3.up);
+        Vector3 cameraRight = Vector3.ProjectOnPlane(_CameraTransform.right, Vector3.up);
+
+        if (cameraForward.sqrMagnitude > 0.001f)
+            cameraForward.Normalize();
+        if (cameraRight.sqrMagnitude > 0.001f)
+            cameraForward.Normalize();
+
+        Vector3 direction = cameraForward * _playerInputs.y + cameraRight * _playerInputs.x;
+        return Vector3.ClampMagnitude(direction, 1f);
+    }
+
     //How player move on ground
     private void GroundVelocity(ref Vector3 currentVelocity, float deltaTime)
     {
         float speed = _isRun ? _runSpeed : _walkSpeed;
+
+        Vector3 playerDirection = GetCameraPlanarRotation(_playerInputs.MoveButton);
         
         //Retarget the player input to the right movement axis
-        Vector3 targetVel = new Vector3(_playerInputs.MoveButton.y * speed,0 , _playerInputs.MoveButton.x * speed * -1);
+        Vector3 targetVel = new Vector3(playerDirection.x * speed, 0, playerDirection.x * speed);
 
         Debug.Log(targetVel);
         currentVelocity = Vector3.Lerp(currentVelocity, targetVel, deltaTime * speed);
