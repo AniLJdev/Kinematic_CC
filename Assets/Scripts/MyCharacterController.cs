@@ -324,7 +324,8 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
 
     private void OnLookAround(InputAction.CallbackContext ctx)
     {
-
+        Vector3 cameraRelativeMovement = ConvertToCameraSpace(_playerInputs.MoveButton);
+        _moveConvert = cameraRelativeMovement;
     }
 
     //Handle Jump input only
