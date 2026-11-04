@@ -287,6 +287,25 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
 
 
 
+    Vector3 ConvertToCameraSpace(Vector3 input)
+    {
+        Vector3 cameraForward = _CameraTransform.forward;
+        Vector3 cameraRight = _CameraTransform.right;
+
+        cameraForward.y = 0;
+        cameraRight.y = 0;
+
+        cameraForward = cameraForward.normalized;
+        cameraRight = cameraRight.normalized;
+
+        Vector3 cameraForwardZProduct = input.y * cameraForward;
+        Vector3 cameraRightXProduct = input.x * cameraRight;
+
+        Vector3 vectorRotatedToCameraSpace = cameraForwardZProduct + cameraRightXProduct;
+        return vectorRotatedToCameraSpace;
+    }
+
+
     //new Input System
     //handle Move input in Vector2
     private void OnMove(InputAction.CallbackContext ctx)
@@ -295,8 +314,10 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
 
         _playerInputs.MoveButton = input;
 
+        Vector3 cameraRelativeMovement = ConvertToCameraSpace(_playerInputs.MoveButton);
+
         //Convert input into Vector3
-        _moveConvert = new Vector3(_playerInputs.MoveButton.x, 0, _playerInputs.MoveButton.y);
+        _moveConvert = cameraRelativeMovement;
     }
 
 
