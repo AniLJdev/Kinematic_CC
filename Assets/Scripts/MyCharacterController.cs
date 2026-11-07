@@ -7,6 +7,8 @@ using System.Threading;
 public class MyCharacterController : MonoBehaviour, ICharacterController
 {
     private KinematicCharacterMotor _motor;
+
+    [SerializeField] private Animator Zundamon;
     private CinemachineCamera _Camera;
     [SerializeField] private Transform _CameraTransform;
     [SerializeField] private Transform _PlayerModelTransform;
@@ -313,10 +315,14 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
 
         Vector3 jumpForce = _motor.CharacterUp * _jumpForce;
 
-        Vector3 newJumpDirection = new Vector3(_moveConvert.x * Mathf.Abs(currentVelocity.x), 0, _moveConvert.z * Mathf.Abs(currentVelocity.z));
-        currentVelocity = new Vector3(newJumpDirection.x, 0, newJumpDirection.z);
+        Vector2 velocity = new Vector2(Mathf.Abs(currentVelocity.x), Mathf.Abs(currentVelocity.z));
 
-        currentVelocity += jumpForce;
+        float momentum = velocity.magnitude;
+
+        Vector3 newJumpDirection = new Vector3(_moveConvert.x * momentum, 0, _moveConvert.z * momentum);
+        currentVelocity = new Vector3(newJumpDirection.x, jumpForce.y, newJumpDirection.z);
+
+        ///currentVelocity += jumpForce;
         _canJump = false;
 
 
@@ -385,6 +391,9 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
 
         //Convert input into Vector3
         _moveConvert = cameraRelativeMovement;
+        Zundamon.SetFloat("Xmovement", _moveConvert.x);
+
+
     }
 
 
