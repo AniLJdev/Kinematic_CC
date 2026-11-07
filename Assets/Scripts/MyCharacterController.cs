@@ -3,6 +3,7 @@ using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Threading;
+using UnityEngine.Experimental.GlobalIllumination;
 
 public class MyCharacterController : MonoBehaviour, ICharacterController
 {
@@ -46,7 +47,6 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
     [SerializeField] private float _offGroundTime = 0.1f;
     [SerializeField] private float _cooldownTime = 0.25f;
 
-    [SerializeField] private float _airJumpTimer = 0;
 
     //Input System
     private InputSystem_Player _input;
@@ -152,7 +152,7 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
             Jump(ref currentVelocity, deltaTime);
         }
         //Double Jump
-        else if(_airJumpTimer >= 0.25f && _playerInputs.JumpButton && !_motor.GroundingStatus.IsStableOnGround && _airAction >= 1)
+        else if(_playerInputs.JumpButton && !_motor.GroundingStatus.IsStableOnGround && _airAction >= 1)
         {
             Jump2(ref currentVelocity, deltaTime);
             _airAction -= 1;
@@ -183,12 +183,7 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
         
         _canAirJump = false;
 
-        //Air Jump coyote
-        if(_airJumpTimer > 0)
-        {
-            _airJumpTimer = 0;
-        }
-
+        
         if(_canJump && !_canAirJump)
         {
             _airAction = _maxAirAction;
@@ -203,15 +198,8 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
     {
         //Ground detection stay shortly after leaving the ground
         LeaveGroundCoyote();
-        //Enable Air jump
-        CanAirJump();
         //Align Player model with the moving direction
         _PlayerModelTransform.forward += _moveConvert.normalized;
-        //Air jump able
-        if (_airJumpTimer < .25f)
-        {
-            _airJumpTimer += Time.deltaTime;
-        }
         //only overwrite speed when player is controlling 
         if (_playerInputs.MoveButton.sqrMagnitude > 0)
         {
@@ -241,12 +229,18 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
         //Apply jump force and leave ground.
             _motor.ForceUnground();
 
-            Vector3 jumpForce = _motor.CharacterUp * _jumpForce;
+        Vector3 jumpForce = _motor.CharacterUp * _jumpForce;
 
-            currentVelocity += jumpForce;
-            _canJump = false;
+        //Reset velocity to make double jump more controllable base on player input
+        Vector2 velocity = new Vector2(Mathf.Abs(currentVelocity.x), Mathf.Abs(currentVelocity.z));
 
-       
+        float momentum = velocity.magnitude;
+
+        currentVelocity = new Vector3(((_moveConvert.x * momentum) + currentVelocity.x) * _jumpSpeedConservation / 2, jumpForce.y, ((_moveConvert.z * momentum) + currentVelocity.z) * _jumpSpeedConservation / 2);
+        _canJump = false;
+        _playerInputs.JumpButton = false;
+
+
     }
 
     //Air jump
@@ -266,13 +260,7 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
 
     }
 
-    //Add CD to make double jump not triggering right after first jump
-    private async void CanAirJump()
-    {
-        await Awaitable.WaitForSecondsAsync(_cooldownTime);
-
-        _canAirJump = true;
-    }
+    
 
     //When Jump is pressed, it will stay active in the _coyote time
     private async void CoyoteTime()
@@ -282,6 +270,7 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
         await Awaitable.WaitForSecondsAsync(_coyoteTime);
 
         _jumpIsPressed = false;
+        _playerInputs.JumpButton = false;
     }
 
     //When player leave the ground, the detection will stay until off Gound time is time up
