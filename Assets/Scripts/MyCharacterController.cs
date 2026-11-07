@@ -82,6 +82,7 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
     {
         _motor = GetComponent<KinematicCharacterMotor>();
         _motor.CharacterController = this;
+        Cursor.lockState = CursorLockMode.Locked;
     }
 
     private void EnableInputSystem()
@@ -225,7 +226,7 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
         //Retarget the player input to the right movement axis
         Vector3 targetVel = _moveConvert * speed;
 
-        _PlayerModelTransform.forward = _moveConvert.normalized;
+        _PlayerModelTransform.forward += _moveConvert.normalized;
 
         //ground speed limit
         Vector3 maxXZspeed = Vector3.ClampMagnitude(currentVelocity, _maxSpeed);
@@ -260,8 +261,10 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
         LeaveGroundCoyote();
 
         CanAirJump();
-        
-        if(_airJumpTimer < .25f)
+
+        _PlayerModelTransform.forward += _moveConvert.normalized;
+
+        if (_airJumpTimer < .25f)
         {
             _airJumpTimer += Time.deltaTime;
         }
