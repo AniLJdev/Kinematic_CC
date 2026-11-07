@@ -13963,6 +13963,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 330585546}
     - target: {fileID: 939135209865984971, guid: 0dfbc273bbf0cbf4c8a4a9ddb8f92f60, type: 3}
+      propertyPath: _airAcceleration
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 939135209865984971, guid: 0dfbc273bbf0cbf4c8a4a9ddb8f92f60, type: 3}
       propertyPath: _groundAcceleration
       value: 10
       objectReference: {fileID: 0}

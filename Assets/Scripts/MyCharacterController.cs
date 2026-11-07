@@ -27,6 +27,8 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
     // Max air speed
     [SerializeField] private float _airMaxSpeed = 4f;
     [SerializeField] private float _airAcceleration = 2f;
+
+    [SerializeField] private float _jumpSpeedConservation = 0.75f;
     //Direct down force
     [SerializeField] private Vector3 _gravity = new Vector3(0, -9.7f, 0);
 
@@ -258,7 +260,8 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
 
         float momentum = velocity.magnitude;
 
-        currentVelocity = new Vector3(_moveConvert.x * momentum, jumpForce.y, _moveConvert.z * momentum);
+        //currentVelocity = new Vector3(_moveConvert.x * momentum, jumpForce.y, _moveConvert.z * momentum);
+        currentVelocity = new Vector3((_moveConvert.x * (momentum * _jumpSpeedConservation/2)) + (currentVelocity.x * _jumpSpeedConservation/2), jumpForce.y, (_moveConvert.z * (momentum * _jumpSpeedConservation/2)) + (currentVelocity.z * _jumpSpeedConservation/2));
 
         _canJump = false;
 
