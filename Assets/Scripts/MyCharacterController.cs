@@ -260,9 +260,7 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
 
         float momentum = velocity.magnitude;
 
-        //currentVelocity = new Vector3(_moveConvert.x * momentum, jumpForce.y, _moveConvert.z * momentum);
-        currentVelocity = new Vector3((_moveConvert.x * (momentum * _jumpSpeedConservation/2)) + (currentVelocity.x * _jumpSpeedConservation/2), jumpForce.y, (_moveConvert.z * (momentum * _jumpSpeedConservation/2)) + (currentVelocity.z * _jumpSpeedConservation/2));
-
+        currentVelocity = new Vector3(((_moveConvert.x * momentum) + currentVelocity.x) * _jumpSpeedConservation / 2, jumpForce.y, ((_moveConvert.z * momentum) + currentVelocity.z) * _jumpSpeedConservation / 2);
         _canJump = false;
 
 
