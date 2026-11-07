@@ -9,6 +9,7 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
     private KinematicCharacterMotor _motor;
     private CinemachineCamera _Camera;
     [SerializeField] private Transform _CameraTransform;
+    [SerializeField] private Transform _PlayerModelTransform;
 
     [Header("Ground Movement")]
     [SerializeField] private float _walkSpeed = 3f;
@@ -28,8 +29,17 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
     //[SerializeField] private int _jumpCount = 2;
     private bool _jumpIsPressed;
     private bool _canJump;
+    private bool _jumpCoyoteEnded = false;
+    private int _airAction;
+
+    [SerializeField] private bool _canAirJump;
+    [SerializeField] private int _maxAirAction = 1;
     [SerializeField] private float _coyoteTime = 0.2f;
     [SerializeField] private float _offGroundTime = 0.2f;
+
+    [SerializeField] private float _cooldownTime = 0.25f;
+
+    [SerializeField] private float _airJumpTimer = 0;
 
     //Input System
     private InputSystem_Player _input;
@@ -193,7 +203,15 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
 
 
         //Jump module
-        Jump(ref currentVelocity, deltaTime);
+        if (_jumpIsPressed && _canJump)
+        {
+            Jump(ref currentVelocity, deltaTime);
+        }
+        else if(_airJumpTimer >= 0.25f && _playerInputs.JumpButton && !_motor.GroundingStatus.IsStableOnGround && _airAction >= 1)
+        {
+            Jump2(ref currentVelocity, deltaTime);
+            _airAction -= 1;
+        }
     }
 
     //How player move on ground
@@ -207,6 +225,8 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
         //Retarget the player input to the right movement axis
         Vector3 targetVel = _moveConvert * speed;
 
+        _PlayerModelTransform.forward = _moveConvert.normalized;
+
         //ground speed limit
         Vector3 maxXZspeed = Vector3.ClampMagnitude(currentVelocity, _maxSpeed);
         currentVelocity = new Vector3(maxXZspeed.x, currentVelocity.y, maxXZspeed.z);
@@ -215,6 +235,19 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
 
         //Ground coyote
         _canJump = true;
+        
+        _jumpCoyoteEnded = false;
+        _canAirJump = false;
+
+        if(_airJumpTimer > 0)
+        {
+            _airJumpTimer = 0;
+        }
+
+        if(_canJump && !_canAirJump)
+        {
+            _airAction = _maxAirAction;
+        }
     }
 
     //Add part where player move with platform
@@ -226,6 +259,12 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
 
         LeaveGroundCoyote();
 
+        CanAirJump();
+        
+        if(_airJumpTimer < .25f)
+        {
+            _airJumpTimer += Time.deltaTime;
+        }
         //only overwrite speed when player is controlling 
         if (_playerInputs.MoveButton.sqrMagnitude > 0)
         {
@@ -252,17 +291,40 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
     //Raw jump function that pull player up with jump force
     private void Jump(ref Vector3 currentVelocity, float deltaTime)
     {
-        if (/* _playerInputs.JumpButton && */ _jumpIsPressed && _canJump)
-        {
+        
             _motor.ForceUnground();
 
             Vector3 jumpForce = _motor.CharacterUp * _jumpForce;
 
+        currentVelocity = new Vector3(currentVelocity.x, 0, currentVelocity.z);
+
             currentVelocity += jumpForce;
             _canJump = false;
-        }
+
+       
+    }
+    private void Jump2(ref Vector3 currentVelocity, float deltaTime)
+    {
+
+        _motor.ForceUnground();
+
+        Vector3 jumpForce = _motor.CharacterUp * _jumpForce;
+
+        Vector3 newJumpDirection = new Vector3(_moveConvert.x * currentVelocity.x, 0, _moveConvert.z * currentVelocity.z);
+        currentVelocity = new Vector3(newJumpDirection.x, 0, newJumpDirection.z);
+
+        currentVelocity += jumpForce;
+        _canJump = false;
+
+
     }
 
+    private async void CanAirJump()
+    {
+        await Awaitable.WaitForSecondsAsync(_cooldownTime);
+
+        _canAirJump = true;
+    }
 
 
     private async void CoyoteTime()
@@ -275,6 +337,7 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
 
         _jumpIsPressed = false;
         Debug.Log("jump pressed" + _jumpIsPressed);
+        _jumpCoyoteEnded = true;
     }
 
     private async void LeaveGroundCoyote()
@@ -283,6 +346,7 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
         await Awaitable.WaitForSecondsAsync(_offGroundTime);
 
         _canJump = false;
+        _jumpCoyoteEnded = true;
     }
 
 

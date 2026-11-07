@@ -583,12 +583,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 555160237}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 1.106, z: 0.947}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1350076311}
+  m_Father: {fileID: 1059117642}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!65 &555160239
 BoxCollider:
@@ -1246,6 +1246,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 792809191}
+  - {fileID: 555160238}
   m_Father: {fileID: 1350076311}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1084819314
@@ -1746,6 +1747,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MyCharacterController
   _CameraTransform: {fileID: 330585546}
+  _PlayerModelTransform: {fileID: 1059117642}
   _walkSpeed: 5
   _runSpeed: 8
   _groundAcceleration: 5
@@ -1756,6 +1758,7 @@ MonoBehaviour:
   _airAcceleration: 2
   _gravity: {x: 0, y: -22, z: 0}
   _jumpForce: 10
+  _maxAirAction: 1
   _coyoteTime: 0.2
   _offGroundTime: 0.2
 --- !u!114 &1350076309
@@ -1838,7 +1841,6 @@ Transform:
   m_Children:
   - {fileID: 1059117642}
   - {fileID: 1987357523}
-  - {fileID: 555160238}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1362909767
