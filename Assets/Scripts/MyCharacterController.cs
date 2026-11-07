@@ -310,7 +310,7 @@ public class MyCharacterController : MonoBehaviour, ICharacterController
 
         Vector3 jumpForce = _motor.CharacterUp * _jumpForce;
 
-        Vector3 newJumpDirection = new Vector3(_moveConvert.x * currentVelocity.x, 0, _moveConvert.z * currentVelocity.z);
+        Vector3 newJumpDirection = new Vector3(_moveConvert.x * Mathf.Abs(currentVelocity.x), 0, _moveConvert.z * Mathf.Abs(currentVelocity.z));
         currentVelocity = new Vector3(newJumpDirection.x, 0, newJumpDirection.z);
 
         currentVelocity += jumpForce;
